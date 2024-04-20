@@ -89,6 +89,7 @@ bool initialize();
 void signUp();
 void login();
 void encrypt(string &text);
+void decrypt(string &text);
 bool checkUsernameInFile(string encryptedUsername);
 bool checkPasswordInFile(string encryptedUsername, string encryptedPassword);
 void saveToFile(string username, string password);
@@ -108,6 +109,18 @@ void encrypt(string &text) {
         }
     }
 }
+
+
+ // Function to decrypt a string
+    void decrypt(string &text) {
+    for (char &c : text) {
+        if (isalpha(c)) {
+            char base = islower(c) ? 'a' : 'A';
+            c = base + (c - base - SHIFT + 26) % 26; // Decrypt by shifting backwards
+        }
+    }
+}
+
 
 // Function to save the account information to a file
 void saveToFile(string username, string password) {
@@ -195,7 +208,7 @@ void signUp() {
 }
 
 // Function to log in
-void login() {
+void login(string& username){
     accessGranted = false;
     while (!accessGranted) {
         bool usernameCorrect = false;
@@ -227,6 +240,7 @@ void login() {
         }
         cout << "You have access" << endl;
         accessGranted = true;
+        decrypt(username);
     }
 }
 
@@ -327,7 +341,7 @@ int main() {
             signUp();
             break;
         case 2:
-            login();
+            login(username);
             break;
         default:
             cout << "Invalid choice." << endl;
