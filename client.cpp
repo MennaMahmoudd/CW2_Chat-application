@@ -16,11 +16,21 @@
 
 const int SHIFT = 3;
 
+// Define a structure for each message in the chat history
+struct ChatMessage {
+    std::string sender;
+    std::string message;
+    ChatMessage* next;
+
+    ChatMessage(const std::string& sender, const std::string& message) : sender(sender), message(message), next(nullptr) {}
+};
+
 class SecureChatSystem {
 private:
     bool accessGranted;
     unsigned char key[32];
     unsigned char iv[16];
+    ChatMessage* chatHistory; // Linked list to store chat history
 
     // AES encryption functions
     void handleErrors() {
@@ -87,6 +97,20 @@ private:
         return plaintext_len;
     }
 
+        // Helper function to add a message to the chat history linked list
+    void addMessageToHistory(const std::string& sender, const std::string& message) {
+        ChatMessage* newMessage = new ChatMessage(sender, message);
+        if (!chatHistory) {
+            chatHistory = newMessage;
+        } else {
+            ChatMessage* temp = chatHistory;
+            while (temp->next) {
+                temp = temp->next;
+            }
+            temp->next = newMessage;
+        }
+    }
+
     // Function declarations
     bool initialize();
     void signUp();
@@ -100,10 +124,33 @@ private:
     void ReceiveMsg(int s, unsigned char *key, unsigned char *iv);
 
 public:
-    SecureChatSystem() : accessGranted(false) {
+    SecureChatSystem() : accessGranted(false) ,chatHistory(nullptr) {
         // Initialize AES key and IV
         std::strcpy(reinterpret_cast<char*>(key), "01234567890123456789012345678901");
         std::strcpy(reinterpret_cast<char*>(iv), "0123456789012345");
+    }
+
+
+    void displayChatHistory(const std::string& username) {
+    std::cout << "Chat History for User: " << username << std::endl;
+    ChatMessage* temp = chatHistory;
+    while (temp) {
+        if (temp->sender == username) {
+            std::cout << temp->sender << ": " << temp->message << std::endl;
+        }
+        temp = temp->next;
+    }
+}
+
+
+    // Destructor to free memory allocated for chat history linked list
+    ~SecureChatSystem() {
+        ChatMessage* temp = chatHistory;
+        while (temp) {
+            ChatMessage* next = temp->next;
+            delete temp;
+            temp = next;
+        }
     }
 
     // Main function
@@ -350,24 +397,37 @@ void SecureChatSystem::startChatSystem() {
     std::cout << "Choose an option:" << std::endl;
     std::cout << "1. Sign Up" << std::endl;
     std::cout << "2. Log In" << std::endl;
+    std::cout << "3. View Chat History" << std::endl;
     std::cout << "Enter your choice: ";
     std::cin >> choice;
     std::cin.ignore();
 
     std::string username;
+    SecureChatSystem chatSystem;
 
-    switch (choice) {
-        case 1:
-            signUp();
+switch (choice) {
+    case 1:
+        signUp();
+        break;
+    case 2:
+        login(username); // Pass username to login function
+        break;
+    case 3:
+          login(username);
+            if (accessGranted) {
+                displayChatHistory(username);
+            } else {
+                std::cout << "Please log in first." << std::endl;
+                login(username);   
+            }
             break;
-        case 2:
-            login(username); // Pass username to login function
-            break;
-        default:
-            std::cout << "Invalid choice." << std::endl;
-            close(s);
-            return;
-    }
+    default:
+        std::cout << "Invalid choice." << std::endl;
+        close(s);
+        return;
+}
+
+  
 
     // Now, pass the socket as an argument to the thread functions correctly
     // Assuming username is known after login
@@ -377,6 +437,8 @@ void SecureChatSystem::startChatSystem() {
     senderThread.join();
     receiverThread.join();
 }
+
+
 
 int main() {
     SecureChatSystem chatSystem;
