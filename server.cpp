@@ -11,26 +11,6 @@
 
 using namespace std;
 
-const int SHIFT = 3;
-
-
-string encrypt(const string& text, int shift) {
-    string result = "";
-    for (char ch : text) {
-        if (isalpha(ch)) {
-            char base = islower(ch) ? 'a' : 'A';
-            result += static_cast<char>((ch - base + shift) % 26 + base);
-        } else {
-            result += ch;
-        }
-    }
-    return result;
-}
-
-string decrypt(const string& text, int shift) {
-    return encrypt(text, 26 - shift);
-}
-
 void handleErrors() {
     ERR_print_errors_fp(stderr);
     abort();
@@ -99,18 +79,20 @@ void InteractWithClient(int clientSocket, int* clients, int& clientCount, unsign
             break;
         }
 
-        unsigned char decryptedtext[4096];
-        int decryptedtext_len = decrypt(buffer, bytesrecvd, key, iv, decryptedtext);
-        decryptedtext[decryptedtext_len] = '\0';
+        int plaintext_len;
+        unsigned char plaintext[4096];
+        plaintext_len = decrypt(buffer, bytesrecvd, key, iv, plaintext);
+        plaintext[plaintext_len] = '\0';
 
-        cout << "Message from client: " << decryptedtext << endl;
+        cout << "Encrypted message from client: " << buffer << endl;
+        cout << "Decrypted message from client: " << plaintext << endl;
 
         for (int i = 0; i < clientCount; ++i) {
             if (clients[i] != clientSocket) {
                 int ciphertext_len;
                 unsigned char ciphertext[4096];
                 // Encrypt the received message before sending to other clients
-                ciphertext_len = encrypt(decryptedtext, decryptedtext_len, key, iv, ciphertext);
+                ciphertext_len = encrypt(plaintext, plaintext_len, key, iv, ciphertext);
                 send(clients[i], ciphertext, ciphertext_len, 0);
             }
         }
