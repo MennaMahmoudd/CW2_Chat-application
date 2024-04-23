@@ -281,7 +281,7 @@ void ReceiveMsg(int s, unsigned char *key, unsigned char *iv) {
             if (usernamePos != string::npos && messagePos != string::npos) {
                 string username = decryptedMessage.substr(usernamePos + 10, messagePos - (usernamePos + 10));
                 string message = decryptedMessage.substr(messagePos + 11);
-                cout << "Received from " << username << ": " << message << endl;
+                cout << "send from " << username << ": " << message << endl;
 
                 appendToChatHistory(username, decryptedMessage);
             }
@@ -307,9 +307,7 @@ int main() {
         return 1;
     }
 
-    int port;
-    cout << "Enter the port number: ";
-    cin >> port;
+    int port = 12345;
     string serveraddr = "127.0.0.1";
     sockaddr_in server;
     server.sin_family = AF_INET;

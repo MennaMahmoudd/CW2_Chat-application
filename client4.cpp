@@ -310,7 +310,7 @@ int main() {
         return 1;
     }
 
-    int port = 12345;
+    int port = 12346;
     string serveraddr = "127.0.0.1";
     sockaddr_in server;
     server.sin_family = AF_INET;
